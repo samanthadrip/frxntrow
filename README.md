@@ -1,5 +1,4 @@
-(https://github.com/user-attachments/files/26632270/frxnt_row_playlist.3.html)
-
+frxnt_row_playlist.html(https://github.com/user-attachments/files/26632412/frxnt_row_playlist.html)
 <!DOCTYPE html>
 <html lang="en">
 <head>
