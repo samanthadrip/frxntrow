@@ -195,7 +195,7 @@
 <script>
 const CLIENT_ID = 'f6c2fd16dad14495860a1aa10aa66d42';
 const REDIRECT_URI = 'https://samanthadrip.github.io/frxntrow/';
-const SCOPES = 'playlist-modify-public playlist-modify-private';
+const SCOPES = 'playlist-modify-public playlist-modify-private user-read-private user-read-email';
 
 const zones = [
   { name:'Heavy hill', bpmMin:40, bpmMax:58, gearMin:8, gearMax:12, color:'#7F77DD' },
@@ -286,29 +286,38 @@ async function search(query) {
   list.style.display = 'flex';
   label.style.display = 'block';
   list.innerHTML = `<div class="loading">Searching...</div>`;
-
   try {
     const res = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=8`, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
     const data = await res.json();
+    if (data.error) {
+      list.innerHTML = `<div class="result-empty">Error: ${data.error.message} — try reconnecting Spotify.</div>`;
+      return;
+    }
     if (!data.tracks || !data.tracks.items.length) {
       list.innerHTML = `<div class="result-empty">No results found</div>`;
       return;
     }
     const tracks = data.tracks.items;
     const ids = tracks.map(t => t.id).join(',');
-    const featRes = await fetch(`https://api.spotify.com/v1/audio-features?ids=${ids}`, {
-      headers: { 'Authorization': `Bearer ${accessToken}` }
-    });
-    const featData = await featRes.json();
+    let audioFeatures = {};
+    try {
+      const featRes = await fetch(`https://api.spotify.com/v1/audio-features?ids=${ids}`, {
+        headers: { 'Authorization': `Bearer ${accessToken}` }
+      });
+      const featData = await featRes.json();
+      if (featData.audio_features) {
+        featData.audio_features.forEach((f, i) => { if (f) audioFeatures[tracks[i].id] = f; });
+      }
+    } catch(e) {}
     list.innerHTML = '';
-    tracks.forEach((track, i) => {
-      const feat = featData.audio_features[i];
+    tracks.forEach((track) => {
+      const feat = audioFeatures[track.id];
       const bpm = feat ? Math.round(feat.tempo) : null;
       const zone = bpm ? getZone(bpm) : null;
       const art = track.album.images[2] ? track.album.images[2].url : '';
-        const scQuery = encodeURIComponent(track.name + ' ' + track.artists[0].name + ' remix');
+      const scQuery = encodeURIComponent(track.name + ' ' + track.artists[0].name + ' remix');
       const item = document.createElement('div');
       item.className = 'result-item';
       item.innerHTML = `
@@ -317,16 +326,16 @@ async function search(query) {
           <div class="result-name">${track.name}</div>
           <div class="result-artist">${track.artists.map(a=>a.name).join(', ')}</div>
         </div>
-        ${bpm ? `<div style="text-align:right"><div class="result-bpm">${bpm} BPM</div><div class="result-zone-pill" style="background:${zone.color}22;color:${zone.color};margin-top:3px;">${zone.name}</div></div>` : '<div class="result-bpm" style="color:var(--ink-30)">—</div>'}
+        ${bpm ? `<div style="text-align:right"><div class="result-bpm">${bpm} BPM</div><div class="result-zone-pill" style="background:${zone.color}22;color:${zone.color};margin-top:3px;">${zone.name}</div></div>` : '<div class="result-bpm" style="color:var(--ink-30)">— BPM</div>'}
         <div style="display:flex;flex-direction:column;gap:4px;">
           <button class="result-add" onclick="addTrack('${track.id}','${track.name.replace(/'/g,"\\'")}','${track.artists[0].name.replace(/'/g,"\\'")}',${bpm},'${track.uri}')">Add</button>
-          <a href="https://soundcloud.com/search?q=${scQuery}" target="_blank" class="sc-btn">SoundCloud ↗</a>
+          <a href="https://soundcloud.com/search?q=${scQuery}" target="_blank" class="sc-btn">SC ↗</a>
         </div>
       `;
       list.appendChild(item);
     });
   } catch(e) {
-    list.innerHTML = `<div class="result-empty">Something went wrong. Try again.</div>`;
+    list.innerHTML = `<div class="result-empty">Something went wrong: ${e.message}</div>`;
   }
 }
 
