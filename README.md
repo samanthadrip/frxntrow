@@ -1,5 +1,6 @@
-[frxnt_row_playlist (2).html](https://github.com/user-attachments/files/26632010/frxnt_row_playlist.2.html)
-# frxntrow<!DOCTYPE html>
+[frxnt_row_playlist (3).html](https://github.com/user-attachments/files/26632270/frxnt_row_playlist.3.html)
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -195,7 +196,7 @@
 
 <script>
 const CLIENT_ID = 'f6c2fd16dad14495860a1aa10aa66d42';
-const REDIRECT_URI = 'https://eloquent-liger-bef3f3.netlify.app/frxnt_row_playlist.html';
+const REDIRECT_URI = 'https://samanthadrip.github.io/frxntrow/frxnt_row_playlist.html';
 const SCOPES = 'playlist-modify-public playlist-modify-private';
 
 const zones = [
