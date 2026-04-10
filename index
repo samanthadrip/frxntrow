@@ -300,22 +300,8 @@ async function search(query) {
       return;
     }
     const tracks = data.tracks.items;
-    const ids = tracks.map(t => t.id).join(',');
-    let audioFeatures = {};
-    try {
-      const featRes = await fetch(`https://api.spotify.com/v1/audio-features?ids=${ids}`, {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      });
-      const featData = await featRes.json();
-      if (featData.audio_features) {
-        featData.audio_features.forEach((f, i) => { if (f) audioFeatures[tracks[i].id] = f; });
-      }
-    } catch(e) {}
     list.innerHTML = '';
     tracks.forEach((track) => {
-      const feat = audioFeatures[track.id];
-      const bpm = feat ? Math.round(feat.tempo) : null;
-      const zone = bpm ? getZone(bpm) : null;
       const art = track.album.images[2] ? track.album.images[2].url : '';
       const scQuery = encodeURIComponent(track.name + ' ' + track.artists[0].name + ' remix');
       const item = document.createElement('div');
@@ -326,9 +312,9 @@ async function search(query) {
           <div class="result-name">${track.name}</div>
           <div class="result-artist">${track.artists.map(a=>a.name).join(', ')}</div>
         </div>
-        ${bpm ? `<div style="text-align:right"><div class="result-bpm">${bpm} BPM</div><div class="result-zone-pill" style="background:${zone.color}22;color:${zone.color};margin-top:3px;">${zone.name}</div></div>` : '<div class="result-bpm" style="color:var(--ink-30)">— BPM</div>'}
+        <div class="result-bpm" style="color:var(--ink-30)">—</div>
         <div style="display:flex;flex-direction:column;gap:4px;">
-          <button class="result-add" onclick="addTrack('${track.id}','${track.name.replace(/'/g,"\\'")}','${track.artists[0].name.replace(/'/g,"\\'")}',${bpm},'${track.uri}')">Add</button>
+          <button class="result-add" onclick="addTrack('${track.id}','${track.name.replace(/'/g,"\\'")}','${track.artists[0].name.replace(/'/g,"\\'")}',null,'${track.uri}')">Add</button>
           <a href="https://soundcloud.com/search?q=${scQuery}" target="_blank" class="sc-btn">SC ↗</a>
         </div>
       `;
